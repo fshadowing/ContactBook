@@ -1,9 +1,7 @@
 package contactBook;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-
 
 public class ContactBook {
     static final int DEFAULT_SIZE = 100;
@@ -11,13 +9,13 @@ public class ContactBook {
     private int counter;
     private Contact[] contacts;
     private int currentContact;
-    private int phoneNumberCounter;
+    private final Set<Integer> phoneNumbers;
 
     public ContactBook() {
         counter = 0;
         contacts = new Contact[DEFAULT_SIZE];
         currentContact = -1;
-        phoneNumberCounter = 0;
+        phoneNumbers = new HashSet<>(DEFAULT_SIZE);
     }
 
     //Pre: name != null
@@ -31,34 +29,21 @@ public class ContactBook {
 
     //Pre: name!= null && !hasContact(name)
     public void addContact(String name, int phone, String email) {
-
-        /**
-         * In case does not exist any contact with the phone number added we need to register it in the counter
-         */
-        if(getContactFromPhone(phone) == null) {
-            phoneNumberCounter++;
-        }
         if (counter == contacts.length)
             resize();
         contacts[counter] = new Contact(name, phone, email);
         counter++;
-
+        phoneNumbers.add(phone);
     }
 
     //Pre: name != null && hasContact(name)
     public void deleteContact(String name) {
         int index = searchIndex(name);
-        int samePhoneNumber = getPhone(name);
+        int phone = getPhone(name);
         for(int i=index; i<counter; i++)
             contacts[i] = contacts[i+1];
         counter--;
-
-        /**
-         * In case that does not exist contacts with the phone number of this contact we need to delete it of the counter
-         */
-        if(getContactFromPhone(samePhoneNumber) == null) {
-            phoneNumberCounter--;
-        }
+        if (getContactFromPhone(phone) == null) phoneNumbers.remove(phone);
     }
 
     //Pre: name != null && hasContact(name)
@@ -73,13 +58,11 @@ public class ContactBook {
 
     //Pre: name != null && hasContact(name)
     public void setPhone(String name, int phone) {
-        /**
-         * In case the set phone number is not in any contact saved, we need to add it in the counter
-         */
-        if(getContactFromPhone(phone) == null)
-            phoneNumberCounter++;
-
-        contacts[searchIndex(name)].setPhone(phone);
+        phoneNumbers.add(phone);
+        Contact c = contacts[searchIndex(name)];
+        int oldPhone = c.getPhone();
+        c.setPhone(phone);
+        if (getContactFromPhone(oldPhone) == null) phoneNumbers.remove(oldPhone);
     }
 
     //Pre: name != null && hasContact(name)
@@ -132,7 +115,7 @@ public class ContactBook {
 
     // checks if there are at least two equal phone numbers
     public boolean differentNumbers() {
-            return phoneNumberCounter == counter;
+            return phoneNumbers.size() == counter;
     }
 
 }
