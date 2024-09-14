@@ -117,5 +117,4 @@ public class ContactBook {
     public boolean differentNumbers() {
             return phoneNumbers.size() == counter;
     }
-
 }
