@@ -1,6 +1,7 @@
 package contactBook;
 
-import contactBook.Contact;
+import java.util.HashSet;
+import java.util.Set;
 
 public class ContactBook {
     static final int DEFAULT_SIZE = 100;
@@ -8,11 +9,13 @@ public class ContactBook {
     private int counter;
     private Contact[] contacts;
     private int currentContact;
+    private final Set<Integer> phoneNumbers;
 
     public ContactBook() {
         counter = 0;
         contacts = new Contact[DEFAULT_SIZE];
         currentContact = -1;
+        phoneNumbers = new HashSet<>(DEFAULT_SIZE);
     }
 
     //Pre: name != null
@@ -30,14 +33,17 @@ public class ContactBook {
             resize();
         contacts[counter] = new Contact(name, phone, email);
         counter++;
+        phoneNumbers.add(phone);
     }
 
     //Pre: name != null && hasContact(name)
     public void deleteContact(String name) {
         int index = searchIndex(name);
+        int phone = getPhone(name);
         for(int i=index; i<counter; i++)
             contacts[i] = contacts[i+1];
         counter--;
+        if (getContactFromPhone(phone) == null) phoneNumbers.remove(phone);
     }
 
     //Pre: name != null && hasContact(name)
@@ -52,7 +58,11 @@ public class ContactBook {
 
     //Pre: name != null && hasContact(name)
     public void setPhone(String name, int phone) {
-        contacts[searchIndex(name)].setPhone(phone);
+        phoneNumbers.add(phone);
+        Contact c = contacts[searchIndex(name)];
+        int oldPhone = c.getPhone();
+        c.setPhone(phone);
+        if (getContactFromPhone(oldPhone) == null) phoneNumbers.remove(oldPhone);
     }
 
     //Pre: name != null && hasContact(name)
@@ -93,4 +103,18 @@ public class ContactBook {
         return contacts[currentContact++];
     }
 
+    // returns the contact that has [phone] as its phone number, null if there isn't one
+    public Contact getContactFromPhone(int phone) {
+        this.initializeIterator();
+        while( this.hasNext() ) {
+            Contact c = this.next();
+            if (c.getPhone() == phone) return c;
+        }
+        return null;
+    }
+
+    // checks if there are at least two equal phone numbers
+    public boolean differentNumbers() {
+            return phoneNumbers.size() == counter;
+    }
 }
